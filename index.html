@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Because of You</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lora:ital@0;1&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      font-family: 'Lora', serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Book container - full screen */
+    .book-container {
+      width: 100%;
+      height: 100%;
+      perspective: 2000px;
+      position: relative;
+    }
+
+    .book {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+    }
+
+    /* Single page styling - full screen with scrollable content */
+    .page {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      transform-origin: left center;
+      transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
+      transform-style: preserve-3d;
+      cursor: pointer;
+    }
+
+    .page-content {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      background: linear-gradient(to right, #f9f3e3 0%, #fdfbf4 50%, #f9f3e3 100%);
+      box-shadow: 0 0 30px rgba(0,0,0,0.3);
+      overflow-y: auto;
+      
+      /* Invisible scrollbar */
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .page-content::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Page flip states */
+    .page.flipped {
+      transform: rotateY(-180deg);
+    }
+
+    /* Updated z-index for 7 pages */
+    .page-1 { z-index: 7; }
+    .page-2 { z-index: 6; }
+    .page-3 { z-index: 5; }
+    .page-4 { z-index: 4; }
+    .page-5 { z-index: 3; }
+    .page-6 { z-index: 2; }
+    .page-7 { z-index: 1; }
+
+    .page-1.flipped { z-index: 1; }
+    .page-2.flipped { z-index: 2; }
+    .page-3.flipped { z-index: 3; }
+    .page-4.flipped { z-index: 4; }
+    .page-5.flipped { z-index: 5; }
+    .page-6.flipped { z-index: 6; }
+    .page-7.flipped { z-index: 7; }
+
+    /* Removed padding from page-content, added to text-content only */
+    .text-content {
+      max-width: 650px;
+      margin: 0 auto;
+      padding: 40px;
+      padding-bottom: 100px;
+    }
+
+    /* Cover page styling */
+    .cover-content {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100%;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .cover-content .ornament {
+      color: #d4a855;
+      font-size: 2.5rem;
+      margin-bottom: 30px;
+    }
+
+    .cover-content h1 {
+      font-family: 'Playfair Display', serif;
+      color: #3d2817;
+      font-size: 3rem;
+      margin-bottom: 20px;
+      letter-spacing: 3px;
+    }
+
+    .cover-content .subtitle {
+      color: #7a6b5a;
+      font-style: italic;
+      font-size: 1.3rem;
+      margin-bottom: 40px;
+    }
+
+    .cover-content .instruction {
+      color: #a0937d;
+      font-size: 0.95rem;
+      margin-top: 60px;
+    }
+
+    /* Preface page styling */
+    .preface-content {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100%;
+      text-align: center;
+      padding: 60px 40px;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .preface-content h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      color: #3d2817;
+      margin-bottom: 15px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .preface-divider {
+      width: 80px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #c9a96e, transparent);
+      margin: 0 auto 40px;
+    }
+
+    .preface-text {
+      font-size: 1.15rem;
+      line-height: 2;
+      color: #5c4934;
+      font-style: italic;
+      text-align: center;
+    }
+
+    .preface-text p {
+      margin-bottom: 25px;
+    }
+
+    .preface-ornament {
+      color: #c9a96e;
+      font-size: 1.5rem;
+      margin-top: 40px;
+    }
+
+    /* Full-width image styling */
+    .chapter-photo {
+      width: 100%;
+      height: 40vh;
+      object-fit: cover;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+
+    .chapter-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.9rem;
+      color: #5c4934;
+      margin-bottom: 5px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .chapter-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      color: #3d2817;
+      margin-bottom: 15px;
+      font-style: italic;
+      text-align: center;
+    }
+
+    .divider {
+      width: 100px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #c9a96e, transparent);
+      margin: 0 auto 30px;
+    }
+
+    .chapter-text {
+      font-size: 1.1rem;
+      line-height: 1.9;
+      color: #4a4a4a;
+      text-align: justify;
+    }
+
+    .chapter-text p {
+      margin-bottom: 20px;
+      text-indent: 1.5em;
+    }
+
+    .chapter-text p:first-of-type {
+      text-indent: 0;
+    }
+
+    .drop-cap {
+      float: left;
+      font-family: 'Playfair Display', serif;
+      font-size: 4.5rem;
+      line-height: 0.75;
+      padding-right: 12px;
+      padding-top: 8px;
+      color: #8b4513;
+    }
+
+    .flourish {
+      text-align: center;
+      color: #c9a96e;
+      font-size: 1.5rem;
+      margin: 30px 0;
+      clear: both;
+    }
+
+    .signature {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      text-align: right;
+      margin-top: 30px;
+      color: #5c4934;
+      font-size: 1.1rem;
+      line-height: 1.8;
+    }
+
+    .ending {
+      text-align: center;
+      margin-top: 50px;
+      padding-top: 30px;
+      border-top: 2px solid #e8dcc8;
+      color: #c9a96e;
+      font-size: 1.2rem;
+    }
+
+    /* Added ending page styles */
+    .ending-content {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100%;
+      text-align: center;
+      padding: 60px 40px;
+    }
+
+    .ending-ornament {
+      color: #d4a855;
+      font-size: 3rem;
+      margin-bottom: 40px;
+    }
+
+    .ending-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 4rem;
+      color: #3d2817;
+      margin-bottom: 30px;
+      letter-spacing: 8px;
+      text-transform: uppercase;
+    }
+
+    .ending-message {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      color: #5c4934;
+      font-style: italic;
+      max-width: 500px;
+      line-height: 1.8;
+      margin-bottom: 50px;
+    }
+
+    .ending-flourish {
+      color: #c9a96e;
+      font-size: 2rem;
+      letter-spacing: 10px;
+    }
+
+    /* Navigation */
+    .nav-hint {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.6);
+      color: white;
+      padding: 10px 25px;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .page-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      z-index: 100;
+    }
+
+    /* Click areas for navigation */
+    .click-prev, .click-next {
+      position: fixed;
+      top: 0;
+      height: 100%;
+      width: 15%;
+      z-index: 50;
+      cursor: pointer;
+    }
+
+    .click-prev {
+      left: 0;
+    }
+
+    .click-next {
+      right: 0;
+    }
+
+    /* Remove hover effect on desktop, keep clean on mobile */
+    @media (hover: hover) {
+      .click-prev:hover, .click-next:hover {
+        background: rgba(0,0,0,0.03);
+      }
+    }
+
+    /* Page fade-in animation */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    /* Text content animation */
+    .page-content.animated .text-content {
+      animation: fadeIn 0.6s ease-in;
+    }
+
+    /* Chapter title animation */
+    .page-content.animated .chapter-title {
+      animation: fadeIn 0.6s ease-in 0.1s both;
+    }
+
+    .page-content.animated .chapter-name {
+      animation: fadeIn 0.6s ease-in 0.2s both;
+    }
+
+    /* Flourish animation */
+    .page-content.animated .flourish {
+      animation: fadeIn 0.6s ease-in 0.3s both;
+    }
+
+    /* Cover animation */
+    .page-content.animated .cover-content {
+      animation: fadeIn 0.8s ease-in;
+    }
+
+    /* Preface animation */
+    .page-content.animated .preface-content {
+      animation: fadeIn 0.8s ease-in;
+    }
+
+    /* Ending animation */
+    .page-content.animated .ending-content {
+      animation: fadeIn 0.8s ease-in;
+    }
+
+    /* Toolbar styles */
+    .toolbar {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      border-radius: 50px;
+      display: flex;
+      gap: 12px;
+      z-index: 110;
+      align-items: center;
+    }
+
+    .toolbar-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 8px 12px;
+      border-radius: 25px;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 40px;
+      height: 40px;
+    }
+
+    .toolbar-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.1);
+    }
+
+    .toolbar-btn.active {
+      background: rgba(212, 168, 85, 0.4);
+      color: #d4a855;
+    }
+
+    .toolbar-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Hidden message styles */
+    .hidden-message {
+      cursor: pointer;
+      position: relative;
+      text-decoration: underline;
+      text-decoration-color: rgba(212, 168, 85, 0.3);
+      text-decoration-style: dotted;
+      transition: all 0.3s ease;
+    }
+
+    .hidden-message:hover {
+      text-decoration-color: #d4a855;
+      color: #d4a855;
+    }
+
+    .hidden-reveal {
+      display: inline;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      color: #d4a855;
+      font-style: italic;
+      font-weight: 600;
+    }
+
+    .hidden-message.revealed .hidden-reveal {
+      opacity: 1;
+    }
+
+    /* Highlight styles */
+    .highlighted {
+      background: linear-gradient(120deg, rgba(212, 168, 85, 0.3), rgba(196, 154, 58, 0.3));
+      padding: 2px 4px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .highlighted:hover {
+      background: linear-gradient(120deg, rgba(212, 168, 85, 0.5), rgba(196, 154, 58, 0.5));
+    }
+
+    /* TTS Controls */
+    .tts-speed-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 6px 12px;
+      border-radius: 20px;
+      margin-left: 8px;
+    }
+
+    .tts-speed-control input {
+      width: 60px;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.3);
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    .tts-speed-control input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #d4a855;
+      cursor: pointer;
+    }
+
+    .tts-speed-control input::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #d4a855;
+      cursor: pointer;
+      border: none;
+    }
+
+    .tts-speed-label {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.7);
+      min-width: 25px;
+    }
+
+    /* Ambiance Controls */
+    .ambiance-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 6px 12px;
+      border-radius: 20px;
+      margin-left: 8px;
+    }
+
+    .ambiance-control select {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      border: 1px solid rgba(212, 168, 85, 0.3);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    .ambiance-control select:hover {
+      border-color: #d4a855;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .ambiance-control select:focus {
+      border-color: #d4a855;
+      box-shadow: 0 0 0 2px rgba(212, 168, 85, 0.2);
+    }
+
+    .ambiance-control select option {
+      background: #1a1a2e;
+      color: white;
+    }
+
+    .ambiance-control input[type="range"] {
+      width: 80px;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.3);
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    .ambiance-control input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #d4a855;
+      cursor: pointer;
+    }
+
+    .ambiance-control input[type="range"]::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #d4a855;
+      cursor: pointer;
+      border: none;
+    }
+
+    @media (max-width: 768px) {
+      .text-content {
+        padding: 25px 20px;
+      }
+
+      .cover-content {
+        padding: 25px 20px;
+      }
+
+      .cover-content h1 {
+        font-size: 2.2rem;
+      }
+
+      /* Preface responsive */
+      .preface-content {
+        padding: 40px 25px;
+      }
+
+      .preface-content h2 {
+        font-size: 1.4rem;
+      }
+
+      .preface-text {
+        font-size: 1rem;
+      }
+
+      /* Adjusted mobile image height */
+      .chapter-photo {
+        height: 30vh;
+      }
+
+      .chapter-name {
+        font-size: 1.5rem;
+      }
+
+      .chapter-text {
+        font-size: 1rem;
+      }
+
+      .drop-cap {
+        font-size: 3.5rem;
+      }
+
+      /* Larger tap areas on mobile */
+      .click-prev, .click-next {
+        width: 25%;
+      }
+      
+      .nav-hint {
+        font-size: 0.8rem;
+        padding: 8px 18px;
+      }
+
+      /* Ending page responsive */
+      .ending-title {
+        font-size: 2.5rem;
+        letter-spacing: 5px;
+      }
+
+      .ending-message {
+        font-size: 1.2rem;
+      }
+
+      .toolbar {
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 10px 15px;
+        gap: 8px;
+      }
+
+      .toolbar-btn {
+        font-size: 1rem;
+        min-width: 36px;
+        height: 36px;
+        padding: 6px 10px;
+      }
+
+      .tts-speed-control {
+        display: none;
+      }
+
+      .ambiance-control {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="book-container">
+    <div class="book">
+      <!-- Page 1: Cover -->
+      <div class="page page-1" data-page="1">
+        <div class="page-content">
+          <div class="cover-content">
+            <div class="ornament">✦ ❦ ✦</div>
+            <h1>Because of You</h1>
+            <p class="subtitle">First Edtion</p>
+            <p class="instruction">Penn Atienza</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page 2: Preface -->
+      <div class="page page-2" data-page="2">
+        <div class="page-content">
+          <div class="preface-content">
+            <h2>Preface</h2>
+            <div class="preface-divider"></div>
+            <div class="preface-text">
+              <p>I've been meaning to write this for a while—not because I think I can capture everything I feel, but because I want you to know how much you actually mean to me. This isn't a love letter full of clichés or perfect sentences. It's me, messy and honest, trying to put into words what you do to my life without even trying.</p>
+              <p>It's not filled with clever lines or dramatic speeches. It's just me, trying to be honest, messy, and real. It's my way of putting into words the impact you have on me, on my life, and on the way I see the world. You make ordinary days extraordinary, moments unforgettable, and even the small things in life meaningful. You've given me more than I can say, and I want to at least try to tell you that.</p>
+              <p>So, what follows isn't perfect. It won't be flawless, and it might sound simple or clumsy at times—but it's all true. Every word comes from the part of me that knows that my life is better, brighter, and infinitely richer because of you. I hope when you read this, you can feel even a little bit of the gratitude, awe, and admiration I carry for from the moment I said "I love you".</p>
+              <p>May these words find you exactly when you need them most.</p>
+            </div>
+            <div class="preface-ornament">❦</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page 3: Chapter 1 -->
+      <div class="page page-3" data-page="3">
+        <div class="page-content">
+          <div class="text-content">
+            <p class="chapter-title">Chapter One</p>
+            <h2 class="chapter-name">Your Beauty</h2>
+            <div class="divider"></div>
+            <div class="chapter-text">
+              <p><span class="drop-cap">D</span>ear Saian, I keep trying to describe you, but words always fall short. You're beautiful, yes, in the obvious ways—your smile, your eyes, the way you move. But it's deeper than that. It's in the small things no one notices. How your hair falls across your face when you're thinking. How your lips twitch slightly when you're holding back a laugh. How your voice softens when you're passionate about something, or how <span class="hidden-message">it's calm and steady when you're comforting someone<span class="hidden-reveal">—it makes me feel safe</span></span>. Those little moments, the ones that feel too small to matter, are the ones that leave me completely captivated.</p>
+              <p>You have this energy about you, this presence that makes the world stop, even if only for a second. I catch myself staring sometimes, not because I'm trying to, but because I can't help it. I want to remember everything about you—the way you tilt your head when you're curious, the way your hands move when you talk, <span class="hidden-message">the way your laughter feels like it's lighting up the room<span class="hidden-reveal">—even from miles away</span></span>. You're alive in ways that make me want to slow down and notice the world the way you do.</p>
+              <p>And it's not perfect. You're human. You have doubts, worries, insecurities, and that's what makes it real. That's what makes it hit harder than any surface-level beauty ever could. The way you exist, completely unfiltered at times, makes everything around you sharper, softer, warmer, and brighter. Every time <span class="hidden-message">I see you<span class="hidden-reveal">or even think about you</span></span>, I'm reminded that beauty isn't just about looks—it's about the way someone inhabits the world, and you do it like no one else.</p>
+            </div>
+            <div class="flourish">❦</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page 4: Chapter 2 -->
+      <div class="page page-4" data-page="4">
+        <div class="page-content">
+          <div class="text-content">
+            <p class="chapter-title">Chapter Two</p>
+            <h2 class="chapter-name">Life Feels Different Now With You</h2>
+            <div class="divider"></div>
+            <div class="chapter-text">
+              <p><span class="drop-cap">L</span>ife with you isn't about grand gestures or dramatic moments—it's about the little things that matter the most. Ordinary days feel extraordinary when you're around. A simple walk, a quiet afternoon, a random conversation over nothing at all—they all become <span class="hidden-message">memories I can't stop replaying<span class="hidden-reveal">your memory stays with me always</span></span>. I catch myself smiling over nothing, just thinking about something you said, or the way you laughed at something silly. That's how you touch my life—you make ordinary feel alive.</p>
+              <p>Even when life is heavy or stressful, <span class="hidden-message">just knowing you're there makes it lighter<span class="hidden-reveal">though I wish you were physically here</span></span>. Challenges that normally feel overwhelming suddenly feel manageable, because somehow, your presence makes the world feel softer. You bring colors into my life that I didn't even know were missing. You make quiet moments feel safe and loud moments feel exciting. You make me notice the little things again—the way sunlight looks through a window, the sound of rain hitting the roof, the way a song can hit differently when you're thinking of someone you care about.</p>
+              <p>You make me feel things I didn't know I could. You make me want to experience life fully, to notice everything, to hold on to every moment. Even when we're apart, I find myself looking forward to the next time I see you. You've made my life richer, fuller, warmer, and somehow simpler all at once. And the crazy part is, it's not because of anything you do—it's just who you are.</p>
+            </div>
+            <div class="flourish">✿</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page 5: Chapter 3 -->
+      <div class="page page-5" data-page="5">
+        <div class="page-content">
+          <div class="text-content">
+            <p class="chapter-title">Chapter Three</p>
+            <h2 class="chapter-name">My Life With You</h2>
+            <div class="divider"></div>
+            <div class="chapter-text">
+              <p><span class="drop-cap">I</span>am not going to pretend life is perfect. I mess up. I get frustrated. I'm stubborn and impatient and a lot of times I don't say what I feel when I should. But with you, <span class="hidden-message">it doesn't feel like I have to be perfect<span class="hidden-reveal">you accept me as I am</span></span>. I can just be me, and somehow that feels enough. You make me want to be better—not for anyone else, but because being around you makes me want to live up to the way you see the world. You make me laugh even when I don't feel like it, you make me think about things I usually ignore, and you make the messy, complicated parts of life feel manageable.</p>
+              <p>I think about the future with you, not in some big, dramatic way, but in small, perfect moments. I think about <span class="hidden-message">mornings where we sit together drinking coffee<span class="hidden-reveal">I want mornings with you</span></span>, talking about random nonsense until the sun is high in the sky. I think about nights where we stay up too late, lying awake and just being together without needing words. I think about afternoons where nothing is happening, but everything feels alive just because you're there. Those little things—they're what I want. That's what matters to me.</p>
+              <p>You make my life feel fuller in ways I never imagined. You make me feel like living is beautiful again. You make me hope and dream and care about things that I had stopped noticing. You make me feel like I belong somewhere, like there's a place where all the chaos of life doesn't matter as long as you're in it.</p>
+            </div>
+            <div class="flourish">❦</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page 6: Chapter 4 -->
+      <div class="page page-6" data-page="6">
+        <div class="page-content">
+          <div class="text-content">
+            <p class="chapter-title">Chapter Four</p>
+            <h2 class="chapter-name">The Distance Between Us</h2>
+            <div class="divider"></div>
+            <div class="chapter-text">
+              <p><span class="drop-cap">W</span>e don't get the luxury of shared space. No casual touches. No spontaneous moments where I can just look at you and know everything is okay. <span class="hidden-message">There are days when that absence is loud<span class="hidden-reveal">Missing you is painful sometimes</span></span>, when it sits with me and reminds me that wanting someone doesn't automatically mean having them. The distance is real, and pretending otherwise would be dishonest.</p>
+              <p>There are moments I wish I could show you things instead of describing them. Times when I wish I could sit beside you instead of imagining you somewhere else, living in a different place, under a different sky. Sometimes it's frustrating how close you feel and how far you actually are. That contrast can be exhausting.</p>
+              <p>But even with all that space between us, <span class="hidden-message">you're present in my life in ways that surprise me<span class="hidden-reveal">you're always on my mind</span></span>. You show up in my thoughts throughout the day. I catch myself wanting to tell you things immediately, even before I realize how automatic that impulse has become. Distance hasn't muted you. It's sharpened you.</p>
+              <p>If anything, being apart has made me more aware of what you mean to me. I don't take your attention lightly. I don't take your time for granted. When someone matters to you from far away, you feel it clearly, without confusion or convenience masking the truth.</p> 
+            </div>
+            <div class="flourish">✦</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page 7: Ending Page -->
+      <div class="page page-7" data-page="7">
+        <div class="page-content">
+          <div class="ending-content">
+            <div class="ending-ornament">✦ ❦ ✦</div>
+            <h1 class="ending-title">End</h1>
+            <p class="ending-message">Better things are coming for you.</p>
+            <div class="ending-flourish">✦ ✦ ✦</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation click areas -->
+    <div class="click-prev" onclick="prevPage()"></div>
+    <div class="click-next" onclick="nextPage()"></div>
+  </div>
+
+  <!-- Toolbar with interactive controls -->
+  <div class="toolbar">
+    <button class="toolbar-btn" id="fullscreenBtn" title="Fullscreen" aria-label="Toggle fullscreen mode">⛶</button>
+    <button class="toolbar-btn" id="ttsBtn" title="Text-to-Speech" aria-label="Toggle text to speech">🔊</button>
+    <div class="tts-speed-control" id="ttsSpeedControl" style="display: none;">
+      <label class="tts-speed-label" for="ttsSpeed">Speed:</label>
+      <input type="range" id="ttsSpeed" min="0.5" max="2" step="0.1" value="1">
+    </div>
+    <button class="toolbar-btn" id="ambianceBtn" title="Ambiance" aria-label="Toggle background ambiance">🎵</button>
+    <div class="ambiance-control" id="ambianceControl" style="display: none;">
+      <select id="ambianceSelect" aria-label="Select ambient sound">
+        <option value="none">No Ambiance</option>
+        <option value="rain">Rain</option>
+        <option value="forest">Forest</option>
+        <option value="ocean">Ocean</option>
+        <option value="fireplace">Fireplace</option>
+        <option value="birds">Birds</option>
+      </select>
+      <input type="range" id="ambianceVolume" min="0" max="100" value="30" aria-label="Ambiance volume">
+    </div>
+    <button class="toolbar-btn" id="highlightModeBtn" title="Highlight Mode" aria-label="Toggle highlight mode">✏️</button>
+  </div>
+
+  <!-- Audio elements for ambiance -->
+  <audio id="rainAudio" loop preload="none">
+    <source src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_4fc7a27f0c.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="forestAudio" loop preload="none">
+    <source src="https://cdn.pixabay.com/download/audio/2022/06/09/audio_baa24dd01a.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="oceanAudio" loop preload="none">
+    <source src="https://cdn.pixabay.com/download/audio/2021/08/16/audio_12e9a8d5c8.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="fireplaceAudio" loop preload="none">
+    <source src="https://cdn.pixabay.com/download/audio/2022/01/05/audio_3807d9e5e1.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="birdsAudio" loop preload="none">
+    <source src="https://cdn.pixabay.com/download/audio/2022/03/24/audio_80e3b2ffa1.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- Updated total pages display to 7 -->
+  <div class="page-indicator">Page <span id="currentPage">1</span> of 7</div>
+  <div class="nav-hint">
+    <span class="desktop-hint">← Click edges or use arrow keys →</span>
+    <span class="mobile-hint">← Tap edges to turn pages →</span>
+  </div>
+
+  <script>
+    let currentPage = 1;
+    const totalPages = 7;
+    const pages = document.querySelectorAll('.page');
+    let highlightMode = false;
+    let ttsEnabled = false;
+    let currentUtterance = null;
+    let ambianceEnabled = false;
+    let currentAmbiance = null;
+    const ambianceAudios = {
+      rain: document.getElementById('rainAudio'),
+      forest: document.getElementById('forestAudio'),
+      ocean: document.getElementById('oceanAudio'),
+      fireplace: document.getElementById('fireplaceAudio'),
+      birds: document.getElementById('birdsAudio')
+    };
+
+    // Initialize hidden messages using event delegation
+    function initializeHiddenMessages() {
+      // Use event delegation on document to handle all hidden messages
+      document.removeEventListener('click', handleHiddenMessageClick);
+      document.addEventListener('click', handleHiddenMessageClick);
+    }
+
+    function handleHiddenMessageClick(e) {
+      const hiddenMessage = e.target.closest('.hidden-message');
+      if (hiddenMessage) {
+        e.stopPropagation();
+        e.preventDefault();
+        hiddenMessage.classList.toggle('revealed');
+      }
+    }
+
+    // Initialize highlight functionality
+    function initializeHighlighting() {
+      const pageContent = pages[currentPage - 1].querySelector('.page-content');
+      const textElements = pageContent.querySelectorAll('.chapter-text p, .preface-text p, .ending-message, .cover-content, .text-content');
+      
+      textElements.forEach(el => {
+        el.addEventListener('click', function(e) {
+          if (highlightMode && e.target.tagName !== 'BUTTON') {
+            e.stopPropagation();
+            // Only highlight direct text nodes
+            const selection = window.getSelection();
+            if (selection.toString().length > 0) {
+              wrapSelectedText();
+            }
+          }
+        });
+      });
+    }
+
+    // Wrap selected text with highlight class
+    function wrapSelectedText() {
+      const selection = window.getSelection();
+      if (selection.rangeCount === 0) return;
+
+      const range = selection.getRangeAt(0);
+      const span = document.createElement('span');
+      span.className = 'highlighted';
+      
+      try {
+        range.surroundContents(span);
+        // Save highlights to localStorage
+        saveHighlights();
+      } catch (e) {
+        // Fallback for complex selections
+        const contents = range.extractContents();
+        span.appendChild(contents);
+        range.insertNode(span);
+        saveHighlights();
+      }
+      
+      selection.removeAllRanges();
+    }
+
+    // Save highlights to localStorage
+    function saveHighlights() {
+      const highlights = [];
+      document.querySelectorAll('.highlighted').forEach((el, index) => {
+        highlights.push({
+          pageNum: currentPage,
+          text: el.textContent,
+          position: index
+        });
+      });
+      localStorage.setItem('bookHighlights', JSON.stringify(highlights));
+    }
+
+    // Load highlights from localStorage
+    function loadHighlights() {
+      const saved = localStorage.getItem('bookHighlights');
+      if (saved) {
+        const highlights = JSON.parse(saved);
+        highlights.forEach(highlight => {
+          if (highlight.pageNum === currentPage) {
+            // Highlights are already applied via CSS class
+          }
+        });
+      }
+    }
+
+    // Text-to-Speech functionality
+    function toggleTTS() {
+      const ttsBtn = document.getElementById('ttsBtn');
+      const ttsSpeedControl = document.getElementById('ttsSpeedControl');
+      
+      if (!ttsEnabled) {
+        speakCurrentPage();
+        ttsBtn.classList.add('active');
+        ttsSpeedControl.style.display = 'flex';
+        ttsEnabled = true;
+      } else {
+        stopTTS();
+        ttsBtn.classList.remove('active');
+        ttsSpeedControl.style.display = 'none';
+        ttsEnabled = false;
+      }
+    }
+
+    function speakCurrentPage() {
+      const pageContent = pages[currentPage - 1].querySelector('.page-content');
+      let textToSpeak = '';
+
+      if (currentPage === 1) {
+        textToSpeak = pageContent.querySelector('.cover-content').innerText;
+      } else if (currentPage === 2) {
+        textToSpeak = pageContent.querySelector('.preface-content').innerText;
+      } else if (currentPage === totalPages) {
+        textToSpeak = pageContent.querySelector('.ending-content').innerText;
+      } else {
+        textToSpeak = pageContent.querySelector('.text-content').innerText;
+      }
+
+      const synth = window.speechSynthesis;
+      
+      // Cancel any ongoing speech
+      if (currentUtterance) {
+        synth.cancel();
+      }
+
+      currentUtterance = new SpeechSynthesisUtterance(textToSpeak);
+      const speedSlider = document.getElementById('ttsSpeed');
+      currentUtterance.rate = parseFloat(speedSlider.value);
+
+      synth.speak(currentUtterance);
+    }
+
+    function stopTTS() {
+      window.speechSynthesis.cancel();
+      currentUtterance = null;
+    }
+
+    // Update TTS speed
+    document.addEventListener('DOMContentLoaded', function() {
+      const speedSlider = document.getElementById('ttsSpeed');
+      if (speedSlider) {
+        speedSlider.addEventListener('input', function() {
+          if (ttsEnabled && currentUtterance) {
+            window.speechSynthesis.cancel();
+            currentUtterance.rate = parseFloat(this.value);
+            window.speechSynthesis.speak(currentUtterance);
+          }
+        });
+      }
+    });
+
+    // Ambiance toggle
+    function toggleAmbiance() {
+      const ambianceBtn = document.getElementById('ambianceBtn');
+      const ambianceControl = document.getElementById('ambianceControl');
+      
+      if (!ambianceEnabled) {
+        ambianceBtn.classList.add('active');
+        ambianceControl.style.display = 'flex';
+        ambianceEnabled = true;
+      } else {
+        stopAllAmbiance();
+        ambianceBtn.classList.remove('active');
+        ambianceControl.style.display = 'none';
+        ambianceEnabled = false;
+      }
+    }
+
+    function stopAllAmbiance() {
+      Object.values(ambianceAudios).forEach(audio => {
+        audio.pause();
+        audio.currentTime = 0;
+      });
+      currentAmbiance = null;
+    }
+
+    function playAmbiance(type) {
+      if (type === 'none') {
+        stopAllAmbiance();
+        currentAmbiance = null;
+        return;
+      }
+
+      stopAllAmbiance();
+      const audio = ambianceAudios[type];
+      if (audio) {
+        audio.volume = document.getElementById('ambianceVolume').value / 100;
+        audio.play().catch(err => {
+          console.log('Ambiance playback failed:', err);
+        });
+        currentAmbiance = type;
+      }
+    }
+
+    // Update ambiance volume
+    document.addEventListener('DOMContentLoaded', function() {
+      const ambianceSelect = document.getElementById('ambianceSelect');
+      const ambianceVolume = document.getElementById('ambianceVolume');
+      
+      if (ambianceSelect) {
+        ambianceSelect.addEventListener('change', function() {
+          if (ambianceEnabled) {
+            playAmbiance(this.value);
+          }
+        });
+      }
+
+      if (ambianceVolume) {
+        ambianceVolume.addEventListener('input', function() {
+          Object.values(ambianceAudios).forEach(audio => {
+            audio.volume = this.value / 100;
+          });
+        });
+      }
+    });
+
+    // Fullscreen toggle
+    function toggleFullscreen() {
+      const fullscreenBtn = document.getElementById('fullscreenBtn');
+      
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.log('Fullscreen request failed:', err);
+        });
+        fullscreenBtn.classList.add('active');
+      } else {
+        document.exitFullscreen();
+        fullscreenBtn.classList.remove('active');
+      }
+    }
+
+    // Highlight mode toggle
+    function toggleHighlightMode() {
+      highlightMode = !highlightMode;
+      const highlightBtn = document.getElementById('highlightModeBtn');
+      
+      if (highlightMode) {
+        highlightBtn.classList.add('active');
+        document.body.style.cursor = 'text';
+      } else {
+        highlightBtn.classList.remove('active');
+        document.body.style.cursor = 'default';
+      }
+    }
+
+    // Update page display with animation
+    function updatePageDisplay() {
+      document.getElementById('currentPage').textContent = currentPage;
+      
+      pages.forEach((page, index) => {
+        const pageNum = index + 1;
+        if (pageNum < currentPage) {
+          page.classList.add('flipped');
+        } else {
+          page.classList.remove('flipped');
+        }
+      });
+
+      // Add animation to new page
+      const newPage = pages[currentPage - 1];
+      newPage.querySelector('.page-content').classList.remove('animated');
+      setTimeout(() => {
+        newPage.querySelector('.page-content').classList.add('animated');
+      }, 50);
+
+      // Stop TTS if enabled
+      if (ttsEnabled) {
+        stopTTS();
+        speakCurrentPage();
+      }
+
+      // Reinitialize features for new page
+      initializeHighlighting();
+      loadHighlights();
+    }
+
+    function nextPage() {
+      if (currentPage < totalPages) {
+        currentPage++;
+        updatePageDisplay();
+      }
+    }
+
+    function prevPage() {
+      if (currentPage > 1) {
+        currentPage--;
+        updatePageDisplay();
+      }
+    }
+
+    // Event listeners for buttons
+    document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
+    document.getElementById('ttsBtn').addEventListener('click', toggleTTS);
+    document.getElementById('ambianceBtn').addEventListener('click', toggleAmbiance);
+    document.getElementById('highlightModeBtn').addEventListener('click', toggleHighlightMode);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        nextPage();
+      } else if (e.key === 'ArrowLeft') {
+        prevPage();
+      } else if (e.key === 'Escape') {
+        if (document.fullscreenElement) {
+          document.exitFullscreen();
+        }
+      }
+    });
+    
+    function updateHintVisibility() {
+      const isMobile = window.matchMedia('(max-width: 768px)').matches || 
+                       'ontouchstart' in window;
+      const desktopHint = document.querySelector('.desktop-hint');
+      const mobileHint = document.querySelector('.mobile-hint');
+      
+      if (desktopHint && mobileHint) {
+        desktopHint.style.display = isMobile ? 'none' : 'inline';
+        mobileHint.style.display = isMobile ? 'inline' : 'none';
+      }
+    }
+    
+    updateHintVisibility();
+    window.addEventListener('resize', updateHintVisibility);
+
+    let hintHidden = false;
+    function hideHint() {
+      if (!hintHidden) {
+        document.querySelector('.nav-hint').style.opacity = '0';
+        hintHidden = true;
+      }
+    }
+    document.addEventListener('click', hideHint);
+    document.addEventListener('keydown', hideHint);
+
+    // Initialize on page load
+    window.addEventListener('load', function() {
+      initializeHiddenMessages();
+      updatePageDisplay();
+    });
+
+    // Fullscreen change listener
+    document.addEventListener('fullscreenchange', () => {
+      const fullscreenBtn = document.getElementById('fullscreenBtn');
+      if (document.fullscreenElement) {
+        fullscreenBtn.classList.add('active');
+      } else {
+        fullscreenBtn.classList.remove('active');
+      }
+    });
+  </script>
+</body>
+</html>
