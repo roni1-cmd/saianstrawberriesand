@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protected Letter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .login-box {
+            background: white;
+            padding: 48px 32px;
+            text-align: center;
+        }
+
+        .login-box h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+        .login-box p {
+            color: #666;
+            margin-bottom: 32px;
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            border-bottom: 1px solid #ccc;
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: transparent;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-bottom-color: #333;
+        }
+
+        .input-group input::placeholder {
+            color: #999;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px 16px;
+            background: #333;
+            color: white;
+            border: none;
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #555;
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .error {
+            color: #ef4444;
+            font-size: 13px;
+            margin-top: 8px;
+            display: none;
+            animation: shake 0.5s ease;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .letter-box {
+            display: none;
+            background: white;
+            padding: 48px 32px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .letter-box.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .letter-box h1 {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 24px;
+            font-weight: 700;
+        }
+
+        .letter-content {
+            text-align: left;
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 32px;
+        }
+
+        .letter-content p {
+            margin-bottom: 16px;
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .letter-signature {
+            text-align: right;
+            margin-top: 48px;
+            padding-top: 24px;
+        }
+
+        .letter-signature p {
+            margin-bottom: 8px;
+            font-style: italic;
+            color: #666;
+        }
+
+        .logout-btn {
+            margin-top: 24px;
+            padding: 10px 16px;
+            background: #f0f0f0;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Login Section -->
+        <div class="login-box" id="loginBox">
+            <h1>I think this is for you</h1>
+            <p>Enter the passcode to read this letter</p>
+            <p style="color: #999; font-size: 13px; margin-bottom: 24px;">Hint: the four letter-word that i always say regardless of occasion</p>
+            <div class="input-group">
+                <input
+                    type="password"
+                    id="passcodeInput"
+                    placeholder="Enter passcode"
+                    onkeypress="handleEnter(event)"
+                />
+            </div>
+            <button onclick="checkPasscode()">Unlock Letter</button>
+            <div class="error" id="errorMessage">Incorrect passcode. Try again.</div>
+        </div>
+
+        <!-- Letter Section -->
+        <div class="letter-box" id="letterBox">
+            <h1>A Letter for You</h1>
+            <div class="letter-content">
+                <p>My love, Raysi,</p>
+                <p>
+                    Sometimes I stop and think about how lucky I am that you're in my life, and it honestly still surprises me. Out of all the people in the world, somehow our paths crossed and I found someone as amazing as you. You've brought a kind of happiness into my life that feels real and steady, not just the kind that comes and goes. Just knowing that I have you, that I get to talk to you, laugh with you, and share moments with you already means more to me than I can fully put into words.
+                </p>
+                <p>
+                    What I love about us isn't only the big memories we make, but also the simple moments that most people would probably overlook. The random conversations, the laughter that comes out of nowhere, the quiet times when just being around you feels enough. You have this way of making ordinary days feel special without even trying. Being with you makes life feel lighter, and I catch myself smiling sometimes just because I thought about you.
+                </p>
+                <p>
+                    I admire so many things about you, love love ko. Your heart, the way you think, the way you carry yourself, and the way you care about the people around you. You have a way of bringing warmth into spaces and into people's lives, including mine. Being with you has made me appreciate things more and see life in a better way. You've become someone who inspires me to grow, to be better, and to keep moving forward.
+                </p>
+                <p>
+                    When I think about the future, I don't just see you as someone I love right now. I see someone I want to walk through life with. I want to be there for your achievements, the moments you're proud of, the days that challenge you, and everything in between. I want to support your dreams and watch you become everything you're working toward. Being your plus one in your life wouldn't feel like a responsibility to me. It would honestly be an honor.
+                </p>
+                <p>
+                    I want to celebrate your victories with you, comfort you when things feel heavy, and remind you that you're never alone in whatever you face. Life can be unpredictable and messy sometimes, but the thought of walking through it with you makes it feel less scary and a lot more meaningful. Having someone like you beside me is something I deeply value.
+                </p>
+                <p>
+                    Baby, I'm truly grateful for you. Thank you for letting me be part of your world and for bringing so much warmth into mine. No matter where life takes you, I hope you always remember that there's someone here who believes in you, supports you, and loves you deeply. And if I'm lucky enough to continue being part of your journey, being the one standing beside you through everything, that would be one of the greatest things life could ever give me. 🖤
+                </p>
+            </div>
+            <div class="letter-signature">
+                <p>Roni</p>
+            </div>
+            <audio id="letterAudio" controls style="width: 100%; margin-top: 32px; margin-bottom: 24px;">
+                <source src="roni.wav" type="audio/wav">
+                Your browser does not support the audio element.
+            </audio>
+            <button class="logout-btn" onclick="logout()">Lock Letter</button>
+        </div>
+    </div>
+
+    <script>
+        // Set the passcode here (change to whatever you want)
+        const CORRECT_PASSCODE = "gosh";
+
+        function checkPasscode() {
+            const passcode = document.getElementById("passcodeInput").value;
+            const errorMessage = document.getElementById("errorMessage");
+
+            if (passcode === CORRECT_PASSCODE) {
+                // Show letter
+                document.getElementById("loginBox").style.display = "none";
+                document.getElementById("letterBox").classList.add("show");
+                errorMessage.classList.remove("show");
+            } else {
+                // Show error
+                errorMessage.classList.add("show");
+                document.getElementById("passcodeInput").value = "";
+            }
+        }
+
+        function handleEnter(event) {
+            if (event.key === "Enter") {
+                checkPasscode();
+            }
+        }
+
+        function logout() {
+            document.getElementById("letterBox").classList.remove("show");
+            document.getElementById("loginBox").style.display = "block";
+            document.getElementById("passcodeInput").value = "";
+            document.getElementById("errorMessage").classList.remove("show");
+        }
+    </script>
+</body>
+</html>
