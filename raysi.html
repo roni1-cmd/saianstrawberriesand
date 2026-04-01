@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>for raysi</title>
+<link href="https://fonts.googleapis.com/css2?family=Nothing+You+Could+Do&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --lh:36px;
+  --top-pad:72px;   /* first rule offset from top */
+  --lpad:82px;
+  --rpad:28px;
+
+  --paper:#faf7ee;
+  --rule:#bdd0e8;
+  --margin:#e08080;
+  --blue:#1a3870;
+  --blue2:#2a50a0;
+  --blue3:#4a70c0;
+  --pink:#d85070;
+  --lilac:#7858b0;
+  --mint:#4a9878;
+  --peach:#d87848;
+  --cover:#162340;
+  --spiral:#262626;
+}
+
+html,body{
+  width:100%;height:100%;
+  overflow:hidden;
+  background:#111;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* ── SVG FILTERS for smudges & texture ── */
+.filters{position:absolute;width:0;height:0;overflow:hidden}
+
+/* ── SCENE / BOOK ── */
+.scene{width:100vw;height:100vh;perspective:2600px;display:flex;align-items:center;justify-content:center}
+.book{position:relative;width:100vw;height:100vh;transform-style:preserve-3d}
+
+/* ── SPIRAL ── */
+.spiral-strip{
+  position:fixed;left:0;top:0;width:26px;height:100vh;
+  background:var(--spiral);z-index:999;
+  display:flex;flex-direction:column;align-items:center;justify-content:space-around;
+  padding:18px 0;pointer-events:none;
+}
+.sp{
+  width:20px;height:20px;flex-shrink:0;border-radius:50%;
+  background:radial-gradient(circle at 33% 33%,#ccc,#444);
+  box-shadow:inset 0 1px 4px rgba(0,0,0,.65),0 1px 2px rgba(255,255,255,.12);
+}
+
+/* ── PAGE ── */
+.page{
+  position:absolute;inset:0;
+  transform-origin:left center;
+  transform-style:preserve-3d;
+  transition:transform .9s cubic-bezier(.645,.045,.355,1);
+}
+.face{
+  position:absolute;inset:0;
+  background:var(--paper);
+  backface-visibility:hidden;
+  overflow:hidden;
+}
+.face.back{transform:rotateY(180deg)}
+
+/* z-stacking */
+.page-cover{z-index:10}
+.page-1{z-index:9}
+.page-2{z-index:8}
+.page-3{z-index:7}
+.page-back{z-index:1}
+.page.flipped{transform:rotateY(-180deg)}
+
+/* page flip shadow */
+.page::after{
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:50;
+  background:linear-gradient(to right,rgba(0,0,0,.2) 0%,transparent 14%);
+  opacity:0;transition:opacity .3s;
+}
+.page.flipped::after{opacity:1}
+
+/* ── THE KEY FIX: ruled lines on the SCROLL CONTAINER itself ──
+   Rules live as background on .page-content (the scrollable div).
+   Content padding-top = --top-pad so first text line = first rule.
+   When user scrolls, both text AND rules move together → always aligned. */
+.page-content{
+  position:absolute;inset:0;
+  overflow-y:auto;overflow-x:hidden;
+  scrollbar-width:none;
+  z-index:2;
+
+  /* RULES as background — scroll with content */
+  background-image:
+    repeating-linear-gradient(
+      transparent 0,
+      transparent calc(var(--lh) - 1.2px),
+      var(--rule) calc(var(--lh) - 1.2px),
+      var(--rule) var(--lh)
+    );
+  background-size:100% var(--lh);
+  /* first rule at exactly --top-pad from top of container */
+  background-position:0 var(--top-pad);
+  background-attachment:local; /* ← moves with scroll! */
+
+  /* snap scroll to line grid */
+  scroll-snap-type:y mandatory;
+}
+.page-content::-webkit-scrollbar{display:none}
+
+/* red margin — fixed overlay on face, not inside scroll */
+.face.ruled::before{
+  content:'';
+  position:absolute;top:0;left:62px;width:2px;height:100%;
+  background:var(--margin);opacity:.45;
+  pointer-events:none;z-index:3;
+}
+
+/* ── TEXT ── */
+.ink-line{
+  display:block;
+  height:var(--lh);
+  line-height:var(--lh);
+  padding:0 var(--rpad) 0 var(--lpad);
+  font-family:'Nothing You Could Do',cursive;
+  font-size:clamp(1rem,2.1vw,1.2rem);
+  color:var(--blue);
+  white-space:nowrap;
+  overflow:visible;
+  scroll-snap-align:start;
+}
+.ink-line.empty{color:transparent;user-select:none}
+
+/* Big heading = 2 lines */
+.big{
+  display:block;
+  height:calc(var(--lh)*2);
+  line-height:calc(var(--lh)*2);
+  padding:0 var(--rpad) 0 var(--lpad);
+  font-family:'Caveat',cursive;font-weight:700;
+  font-size:clamp(1.7rem,3.6vw,2.2rem);
+  color:var(--blue2);
+  scroll-snap-align:start;
+}
+
+/* top padding spacer — not scroll-snapped so it doesn't interfere */
+.top-spacer{
+  display:block;
+  height:var(--top-pad);
+  flex-shrink:0;
+}
+.bottom-spacer{display:block;height:80px}
+
+/* colours */
+.c-pink{color:var(--pink)}
+.c-lilac{color:var(--lilac)}
+.c-mint{color:var(--mint)}
+.c-peach{color:var(--peach)}
+.c-lite{color:var(--blue3)}
+.ul{text-decoration:underline;text-underline-offset:3px}
+.bold{font-family:'Caveat',cursive;font-weight:700}
+
+/* date */
+.dateline{
+  display:block;
+  height:var(--lh);line-height:var(--lh);
+  padding:0 var(--rpad) 0 var(--lpad);
+  font-family:'Nothing You Could Do',cursive;
+  font-size:clamp(.9rem,1.8vw,1rem);
+  color:var(--blue3);
+  scroll-snap-align:start;
+}
+
+/* ── TAPED PHOTO ──
+   floated right, height = multiple of --lh so text flows correctly */
+.photo-wrap{
+  float:right;
+  margin:0 16px 8px 16px;
+  position:relative;
+  /* each photo block is 6 lines tall = 6×36 = 216px */
+  height:calc(var(--lh)*6);
+  display:flex;align-items:center;justify-content:center;
+}
+.photo-frame{
+  background:#fff;
+  padding:8px 8px 28px;
+  box-shadow:2px 4px 14px rgba(0,0,0,.18);
+  transform:rotate(-3deg);
+  position:relative;
+  width:110px;
+}
+.photo-frame.tilt-r{transform:rotate(2.5deg)}
+.photo-inner{
+  width:94px;height:80px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:2.2rem;
+  overflow:hidden;
+}
+/* gradient placeholder that looks like a faded photo */
+.photo-inner.photo-a{background:linear-gradient(135deg,#f0e8d8,#e0d0c0)}
+.photo-inner.photo-b{background:linear-gradient(135deg,#e8d8f0,#d8c8e8)}
+.photo-inner.photo-c{background:linear-gradient(135deg,#d8f0e8,#c8e8d8)}
+.photo-caption{
+  position:absolute;bottom:6px;left:0;right:0;
+  text-align:center;
+  font-family:'Nothing You Could Do',cursive;
+  font-size:.75rem;color:#888;
+}
+
+/* washi tape pieces */
+.tape{
+  position:absolute;
+  width:44px;height:16px;
+  border-radius:2px;
+  opacity:.75;
+  z-index:5;
+}
+.tape-tl{top:-7px;left:10px;transform:rotate(-8deg)}
+.tape-tr{top:-7px;right:10px;transform:rotate(7deg)}
+.tape-bl{bottom:-7px;left:10px;transform:rotate(5deg)}
+.tape-br{bottom:-7px;right:10px;transform:rotate(-6deg)}
+.tape-mid-l{top:50%;left:-14px;transform:translateY(-50%) rotate(-90deg)}
+.tape-mid-r{top:50%;right:-14px;transform:translateY(-50%) rotate(-90deg)}
+
+.tape-pink{background:repeating-linear-gradient(90deg,rgba(220,140,160,.6) 0px,rgba(220,140,160,.6) 6px,rgba(240,180,195,.6) 6px,rgba(240,180,195,.6) 12px)}
+.tape-blue{background:repeating-linear-gradient(90deg,rgba(140,170,220,.55) 0px,rgba(140,170,220,.55) 6px,rgba(180,200,235,.55) 6px,rgba(180,200,235,.55) 12px)}
+.tape-mint{background:repeating-linear-gradient(90deg,rgba(130,200,170,.55) 0px,rgba(130,200,170,.55) 6px,rgba(170,220,200,.55) 6px,rgba(170,220,200,.55) 12px)}
+.tape-yellow{background:repeating-linear-gradient(90deg,rgba(220,200,100,.55) 0px,rgba(220,200,100,.55) 6px,rgba(240,220,130,.55) 6px,rgba(240,220,130,.55) 12px)}
+
+/* ── STICKY NOTE ── */
+.sticky-wrap{
+  float:right;
+  margin:0 16px 4px 16px;
+  height:calc(var(--lh)*4);
+  display:flex;align-items:flex-start;justify-content:flex-end;
+}
+.sticky{
+  background:#f7d060;
+  padding:8px 12px;
+  font-family:'Nothing You Could Do',cursive;
+  font-size:.95rem;line-height:1.5rem;
+  color:#4a3800;
+  transform:rotate(2deg);
+  box-shadow:2px 3px 8px rgba(0,0,0,.18);
+  width:130px;
+  position:relative;
+}
+.sticky::before{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:34px;height:6px;
+  background:rgba(0,0,0,.1);border-radius:0 0 3px 3px;
+}
+
+/* ── CHECKLIST ── */
+.check-title{
+  display:block;height:var(--lh);line-height:var(--lh);
+  padding:0 var(--rpad) 0 var(--lpad);
+  font-family:'Caveat',cursive;font-weight:700;
+  font-size:1.1rem;color:var(--lilac);
+  scroll-snap-align:start;
+}
+.check-item{
+  display:flex;align-items:center;gap:10px;
+  height:var(--lh);
+  padding:0 var(--rpad) 0 var(--lpad);
+  cursor:pointer;
+  transition:transform .12s;
+  scroll-snap-align:start;
+}
+.check-item:hover{transform:translateX(4px)}
+.check-box{
+  width:17px;height:17px;min-width:17px;
+  border:2px solid var(--pink);border-radius:3px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.65rem;color:transparent;
+  transition:background .15s;flex-shrink:0;
+}
+.check-item.checked .check-box{background:var(--pink);color:#fff}
+.check-item.checked .check-label{color:#aaa;text-decoration:line-through;text-decoration-color:var(--pink)}
+.check-label{
+  font-family:'Nothing You Could Do',cursive;
+  font-size:clamp(.95rem,1.9vw,1.1rem);
+  color:var(--blue);line-height:var(--lh);
+}
+
+/* ── SIGNATURE ── */
+.sig-pre{
+  display:block;height:var(--lh);line-height:var(--lh);
+  padding:0 var(--rpad) 0 var(--lpad);
+  font-family:'Nothing You Could Do',cursive;font-size:1rem;color:var(--blue3);
+  scroll-snap-align:start;
+}
+.sig-name{
+  display:block;height:calc(var(--lh)*2);line-height:calc(var(--lh)*2);
+  padding:0 var(--rpad) 0 var(--lpad);
+  font-family:'Caveat',cursive;font-weight:700;
+  font-size:clamp(1.8rem,4.5vw,2.4rem);color:var(--blue2);
+  scroll-snap-align:start;
+}
+.sig-hearts{
+  display:block;height:var(--lh);line-height:var(--lh);
+  padding:0 var(--rpad) 0 var(--lpad);
+  font-size:1.1rem;letter-spacing:4px;color:var(--pink);
+  scroll-snap-align:start;
+}
+
+/* ── INK SMUDGE OVERLAY ── */
+.smudge-layer{
+  position:absolute;inset:0;pointer-events:none;z-index:4;
+  overflow:hidden;
+}
+.smudge{
+  position:absolute;
+  border-radius:50%;
+  filter:blur(6px);
+  mix-blend-mode:multiply;
+  opacity:.22;
+}
+
+/* ── HAND-DRAWN NAV ARROWS (drawn on page, not buttons) ── */
+/* These are SVG elements positioned directly on the page face */
+.arrow-prev,.arrow-next{
+  position:absolute;bottom:18px;z-index:30;
+  cursor:pointer;
+  transition:opacity .2s;
+  user-select:none;-webkit-user-select:none;
+}
+.arrow-prev{left:82px}
+.arrow-next{right:24px}
+.arrow-prev:hover,.arrow-next:hover{opacity:.65}
+.arrow-prev.hidden,.arrow-next.hidden{opacity:.15;pointer-events:none}
+
+/* page number */
+.pgnum{
+  position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+  font-family:'Nothing You Could Do',cursive;
+  font-size:.9rem;color:#bbb;z-index:3;pointer-events:none;
+}
+
+/* ── COVER ── */
+.cover-face{background:var(--cover)!important}
+.cover-face::before{display:none}
+.cover-inner{
+  height:100%;padding:52px 44px;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  position:relative;
+}
+.cover-ruled-bg{
+  position:absolute;inset:0;pointer-events:none;
+  background-image:repeating-linear-gradient(transparent,transparent 39px,rgba(255,255,255,.035) 39px,rgba(255,255,255,.035) 40px);
+}
+.cover-tag{font-family:'Nothing You Could Do',cursive;font-size:.9rem;letter-spacing:.18em;color:rgba(255,255,255,.3);margin-bottom:12px}
+.cover-h1{font-family:'Caveat',cursive;font-weight:700;font-size:clamp(2.8rem,7vw,4.4rem);color:#fff;line-height:1.05}
+.cover-sub{font-family:'Nothing You Could Do',cursive;font-size:1.1rem;color:rgba(255,255,255,.35);margin-top:12px}
+.cover-cta{font-family:'Nothing You Could Do',cursive;font-size:1rem;color:rgba(255,255,255,.22);margin-top:48px;animation:blink 2.2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:.22}50%{opacity:.7}}
+
+.back-cover-face{background:var(--cover)!important}
+.back-cover-face::before{display:none}
+</style>
+</head>
+<body>
+
+<!-- SVG filter defs for smudge blur -->
+<svg class="filters" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="smudge-f"><feTurbulence type="fractalNoise" baseFrequency=".04" numOctaves="4" result="noise"/><feDisplacementMap in="SourceGraphic" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="G"/></filter>
+  </defs>
+</svg>
+
+<!-- Spiral binding -->
+<div class="spiral-strip">
+  <div class="sp"></div><div class="sp"></div><div class="sp"></div>
+  <div class="sp"></div><div class="sp"></div><div class="sp"></div>
+  <div class="sp"></div><div class="sp"></div><div class="sp"></div>
+  <div class="sp"></div><div class="sp"></div><div class="sp"></div>
+  <div class="sp"></div><div class="sp"></div><div class="sp"></div>
+  <div class="sp"></div><div class="sp"></div>
+</div>
+
+<div class="scene"><div class="book" id="book">
+
+<!-- BACK COVER -->
+<div class="page page-back">
+  <div class="face back-cover-face"></div>
+  <div class="face back back-cover-face"></div>
+</div>
+
+<!-- ═══ PAGE 3  front=pg5  back=back-cover ═══ -->
+<div class="page page-3" id="p3">
+  <div class="face front ruled">
+    <!-- smudges -->
+    <div class="smudge-layer">
+      <div class="smudge" style="width:90px;height:40px;background:#1a3870;top:38%;left:72px;transform:rotate(-8deg)"></div>
+      <div class="smudge" style="width:60px;height:28px;background:#2a50a0;bottom:22%;right:40px;transform:rotate(12deg)"></div>
+    </div>
+    <div class="page-content" id="pc-p3f">
+      <span class="top-spacer"></span>
+      <span class="big">sooooooooo yeaaaaaaa</span>
+      <div class="ink-line empty"></div>
+      <div class="ink-line">this is all for you, baby</div>
+      <div class="ink-line">this whole thing, but honestly?</div>
+      <div class="ink-line">I <span class="c-pink ul bold">cannot stop smiling</span> whenever</div>
+      <div class="ink-line">I think about you.</div>
+      <div class="ink-line empty"></div>
+      <div class="ink-line">I mean palagi naman kitang iniisip</div>
+      <div class="ink-line">pero hindi ko pa rin mawari bakit</div>
+      <div class="ink-line">bakit palagi kang nasa isip ko</div>
+      <div class="ink-line">bakit ganiyan kita kamahal</div>
+      <div class="ink-line empty"></div>
+      <div class="ink-line">anyway, baby. <span class="c-peach bold">I love you a silly amount.</span></div>
+      <div class="ink-line">more than snacks.</div>
+      <div class="ink-line">more than sleeping in on a Sunday.</div>
+      <div class="ink-line">more than skipping to the best part</div>
+      <div class="ink-line">of a song.</div>
+      <div class="ink-line empty"></div>
+      <div class="ink-line">And that is saying <span class="ul bold">A LOT.</span></div>
+      <div class="ink-line empty"></div>
+      <div class="ink-line">sana nagustuhan mo ang munting hinanda ko</div>
+      <div class="ink-line">konti lang pero para sayo to lahat</div>
+      <div class="ink-line">don't worry may iba pa akong ipapakita</div>
+      <div class="ink-line">just wait, hmmkay?</div>
+      <div class="ink-line">I LOVEE YOUUU, BABUUU KO!!</div>
+      <div class="ink-line">Forever yours (sayong-sayo talaga),</div>
+      <div class="ink-line empty"></div>
+      <div class="ink-line empty"></div>
+      <span class="sig-pre">always &amp; always,</span>
+      <span class="sig-name">your ron 🫶</span>
+      <span class="sig-hearts">:))))</span>
+      <span class="bottom-spacer"></span>
+    </div>
+    <!-- hand-drawn arrow prev -->
+    <div class="arrow-prev" onclick="prevPage()">
+      <svg width="80" height="44" viewBox="0 0 80 44" fill="none">
+        <path d="M72 30 C60 30 44 32 32 24 C22 17 20 8 28 6" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <path d="M20 14 C22 9 28 6 34 8" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <path d="M20 14 L26 22" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <text x="36" y="42" font-family="Nothing You Could Do,cursive" font-size="11" fill="#1a3870" opacity=".5">prev</text>
+      </svg>
+    </div>
+    <div class="pgnum">5</div>
+  </div>
+  <div class="face back back-cover-face"></div>
+</div>
+
+<!-- ═══ PAGE 2  front=pg3  back=pg4 ═══ -->
+<div class="page page-2" id="p2">
+  <div class="face front ruled">
+    <div class="smudge-layer">
+      <div class="smudge" style="width:70px;height:32px;background:#1a3870;top:55%;right:50px;transform:rotate(5deg)"></div>
+    </div>
+    <div class="page-content" id="pc-p2f">
+      <span class="top-spacer"></span>
+      <!-- taped photo right side -->
+      <div class="photo-wrap">
+        <div class="photo-frame">
+          <div class="tape tape-tl tape-pink"></div>
+          <div class="tape tape-tr tape-mint"></div>
+          <div class="photo-inner photo-b" style="font-size:2.6rem">🌸</div>
+          <span class="photo-caption">a pink flower, babyyy</span>
+        </div>
+      </div>
+      <div class="ink-line">i think about the small moments a lot.</div>
+      <div class="ink-line">Not the big ones —</div>
+      <div class="ink-line">the <span class="c-lilac bold">small ones.</span></div>
+      <div class="ink-line empty"></div>
+      <div class="ink-line">the ones where it's just us,</div>
+      <div class="ink-line">doing nothing in particular,</div>
+      <div class="ink-line">and somehow it still feels like</div>
+      <div class="ink-line">the best version of a day.</div>
+      <div class="ink-line">kasi, baby</div>
+      <div class="ink-line">whenever there is you, whenever you are present</div>
+      <div class="ink-line">i feel fulfilled</div>
+      <div class="ink-line">feel ko safe ako sa kung anu-ano</div>
+      <div class="ink-line empty"></div>
+      <div class="ink-line">that's rare, you know.</div>
+      <div class="ink-line"><span class="c-pink ul bold">YOU. ARE. RARE.</span></div>
+      <div class="ink-line empty"></div>
+      <div class="ink-line">and I don't think I say it enough.</div>
+      <div class="ink-line empty"></div>
+      <div class="ink-line">so here it is, baby, written down,</div>
+      <div class="ink-line">so you can't say I never told you:</div>
+      <span class="bottom-spacer"></span>
+    </div>
+    <div class="arrow-prev" onclick="prevPage()">
+      <svg width="80" height="44" viewBox="0 0 80 44" fill="none">
+        <path d="M72 30 C60 30 44 32 32 24 C22 17 20 8 28 6" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <path d="M20 14 C22 9 28 6 34 8" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <path d="M20 14 L26 22" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <text x="36" y="42" font-family="Nothing You Could Do,cursive" font-size="11" fill="#1a3870" opacity=".5">prev</text>
+      </svg>
+    </div>
+    <div class="arrow-next" onclick="nextPage()">
+      <svg width="80" height="44" viewBox="0 0 80 44" fill="none">
+        <path d="M8 30 C20 30 36 32 48 24 C58 17 60 8 52 6" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <path d="M60 14 C58 9 52 6 46 8" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <path d="M60 14 L54 22" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <text x="2" y="42" font-family="Nothing You Could Do,cursive" font-size="11" fill="#1a3870" opacity=".5">next</text>
+      </svg>
+    </div>
+    <div class="pgnum">3</div>
+  </div>
+
+  <div class="face back ruled">
+    <div class="smudge-layer">
+      <div class="smudge" style="width:80px;height:35px;background:#1a3870;top:18%;left:75px;transform:rotate(-5deg)"></div>
+      <div class="smudge" style="width:50px;height:24px;background:#2a50a0;bottom:30%;right:55px;transform:rotate(9deg)"></div>
+    </div>
+    <div class="page-content" id="pc-p2b">
+      <span class="top-spacer"></span>
+      <span class="big">I love you. SO. SO. MUCH.</span>
+      <div class="ink-line empty"></div>
+      <div class="ink-line">Not in a small, quiet way.</div>
+      <div class="ink-line">In a <span class="ul bold">full, certain, sure of it</span> way.</div>
+      <div class="ink-line empty"></div>
+      <div class="ink-line">The kind that makes me want to be</div>
+      <div class="ink-line">better just because you're watching.</div>
+      <div class="ink-line">The kind that makes everything</div>
+      <div class="ink-line">feel more worth it.</div>
+      <div class="ink-line empty"></div>
+      <div class="ink-line">You're my favourite part of everything.</div>
+      <div class="ink-line">And I'd pick you again every single time.</div>
+      <div class="ink-line empty"></div>
+      <div class="ink-line"><span class="c-peach bold">Every. Single. Time.</span></div>
+      <span class="bottom-spacer"></span>
+    </div>
+    <div class="arrow-prev" onclick="prevPage()">
+      <svg width="80" height="44" viewBox="0 0 80 44" fill="none">
+        <path d="M72 30 C60 30 44 32 32 24 C22 17 20 8 28 6" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <path d="M20 14 C22 9 28 6 34 8" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <path d="M20 14 L26 22" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <text x="36" y="42" font-family="Nothing You Could Do,cursive" font-size="11" fill="#1a3870" opacity=".5">prev</text>
+      </svg>
+    </div>
+    <div class="arrow-next" onclick="nextPage()">
+      <svg width="80" height="44" viewBox="0 0 80 44" fill="none">
+        <path d="M8 30 C20 30 36 32 48 24 C58 17 60 8 52 6" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <path d="M60 14 C58 9 52 6 46 8" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <path d="M60 14 L54 22" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <text x="2" y="42" font-family="Nothing You Could Do,cursive" font-size="11" fill="#1a3870" opacity=".5">next</text>
+      </svg>
+    </div>
+    <div class="pgnum">4</div>
+  </div>
+</div>
+
+<!-- ═══ PAGE 1  front=pg1  back=pg2 ═══ -->
+<div class="page page-1" id="p1">
+  <div class="face front ruled">
+    <div class="smudge-layer">
+      <div class="smudge" style="width:100px;height:44px;background:#1a3870;top:42%;left:68px;transform:rotate(-10deg)"></div>
+    </div>
+    <div class="page-content" id="pc-p1f">
+      <span class="top-spacer"></span>
+      <span class="dateline" id="dateDisplay"></span>
+
+      <!-- sticky note -->
+      <div class="sticky-wrap">
+        <div class="sticky">i know ilang beses ko nang sinabi na i am proud of you but i will always say it. I AM PROUD OF YOU!!!</div>
+      </div>
+
+      <span class="big">hii, bubbb!!</span>
+      <div class="ink-line empty"></div>
+      <div class="ink-line">okay so I've been trying to be cool</div>
+      <div class="ink-line">about this but I <span class="c-pink ul bold">cannot stop smiling</span></div>
+      <div class="ink-line">YESSS, BUBB. I CANNOT STOP SMILING</div>
+      <div class="ink-line">whenever I think about you.</div>
+      <div class="ink-line">my cheeks hurt. It's your fault.</div>
+      <div class="ink-line">to be fair, baby. it's been a while since i made</div>
+      <div class="ink-line">like this for you and i miss doing this for you</div>
+      <div class="ink-line">tsaka i am meaning to do this since forever.</div>
+      <div class="ink-line">you deserve this. i see how you work hard</div>
+     <div class="ink-line">like look at this hardworking baby of mine</div>
+     <div class="ink-line">baby of mine. very diligent tapos ang sipag pa.</div>
+     <div class="ink-line">this is just my way of showing my appreciation</div>
+     <div class="ink-line">to you, my love</div>
+     <div class="ink-line empty"></div>
+      <div class="ink-line">you know what, love?</div>
+      <div class="ink-line"><span class="c-lilac bold">I love everything.</span> about you</div>
+      <div class="ink-line">Every tiny thing.</div>
+      <div class="ink-line">The way you laugh.</div>
+      <div class="ink-line">The way you get so excited about stuff.</div>
+      <div class="ink-line">The way you just... exist.</div>
+      <div class="ink-line empty"></div>
+      <div class="ink-line"><span class="c-mint bold">Just — all of it.</span></div>
+      <span class="bottom-spacer"></span>
+    </div>
+    <!-- only next on page 1 -->
+    <div class="arrow-next" onclick="nextPage()">
+      <svg width="80" height="44" viewBox="0 0 80 44" fill="none">
+        <path d="M8 30 C20 30 36 32 48 24 C58 17 60 8 52 6" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <path d="M60 14 C58 9 52 6 46 8" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <path d="M60 14 L54 22" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <text x="2" y="42" font-family="Nothing You Could Do,cursive" font-size="11" fill="#1a3870" opacity=".5">next</text>
+      </svg>
+    </div>
+    <div class="pgnum">1</div>
+  </div>
+
+  <div class="face back ruled">
+    <div class="smudge-layer">
+      <div class="smudge" style="width:75px;height:30px;background:#1a3870;bottom:38%;left:74px;transform:rotate(6deg)"></div>
+    </div>
+    <div class="page-content" id="pc-p1b">
+      <span class="top-spacer"></span>
+
+      <!-- taped photo -->
+      <div class="photo-wrap">
+        <div class="photo-frame tilt-r">
+          <div class="tape tape-tl tape-blue"></div>
+          <div class="tape tape-tr tape-yellow"></div>
+          <div class="photo-inner photo-a" style="font-size:2.6rem">🍓</div>
+          <span class="photo-caption">my fav person ♡</span>
+        </div>
+      </div>
+
+      <div class="ink-line">I made a very official list of reasons</div>
+      <div class="ink-line">why you're the <span class="ul bold">best thing ever.</span></div>
+      <div class="ink-line">Please review carefully.</div>
+      <div class="ink-line">There will be a quiz. 📝</div>
+      <div class="ink-line empty"></div>
+      <span class="check-title">💖 Official Reasons You're Amazing</span>
+      <div class="check-item" onclick="toggleCheck(this,event)">
+        <div class="check-box">✓</div>
+        <span class="check-label">Your laugh makes everything 10× better</span>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this,event)">
+        <div class="check-box">✓</div>
+        <span class="check-label">You give the best warm fuzzy feelings</span>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this,event)">
+        <div class="check-box">✓</div>
+        <span class="check-label">Being around you is my fav place to be</span>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this,event)">
+        <div class="check-box">✓</div>
+        <span class="check-label">You make boring moments feel like adventures</span>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this,event)">
+        <div class="check-box">✓</div>
+        <span class="check-label">Just existing near you is enough 🥹</span>
+      </div>
+      <span class="bottom-spacer"></span>
+    </div>
+    <div class="arrow-prev" onclick="prevPage()">
+      <svg width="80" height="44" viewBox="0 0 80 44" fill="none">
+        <path d="M72 30 C60 30 44 32 32 24 C22 17 20 8 28 6" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <path d="M20 14 C22 9 28 6 34 8" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <path d="M20 14 L26 22" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <text x="36" y="42" font-family="Nothing You Could Do,cursive" font-size="11" fill="#1a3870" opacity=".5">prev</text>
+      </svg>
+    </div>
+    <div class="arrow-next" onclick="nextPage()">
+      <svg width="80" height="44" viewBox="0 0 80 44" fill="none">
+        <path d="M8 30 C20 30 36 32 48 24 C58 17 60 8 52 6" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <path d="M60 14 C58 9 52 6 46 8" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <path d="M60 14 L54 22" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <text x="2" y="42" font-family="Nothing You Could Do,cursive" font-size="11" fill="#1a3870" opacity=".5">next</text>
+      </svg>
+    </div>
+    <div class="pgnum">2</div>
+  </div>
+</div>
+
+<!-- ═══ COVER ═══ -->
+<div class="page page-cover" id="p0">
+  <div class="face front cover-face">
+    <div class="cover-inner">
+      <div class="cover-ruled-bg"></div>
+      <div class="cover-tag">Ronii &amp; Raysiii</div>
+      <div class="cover-h1">for you,<br>and only for you</div>
+      <div class="cover-sub">i love you &amp; and will always love you</div>
+      <div class="cover-cta">tap anywhere to open →</div>
+    </div>
+  </div>
+  <div class="face back ruled">
+    <div class="page-content">
+      <span class="top-spacer"></span>
+    </div>
+    <div class="arrow-next" onclick="nextPage()">
+      <svg width="80" height="44" viewBox="0 0 80 44" fill="none">
+        <path d="M8 30 C20 30 36 32 48 24 C58 17 60 8 52 6" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <path d="M60 14 C58 9 52 6 46 8" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <path d="M60 14 L54 22" stroke="#1a3870" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".7"/>
+        <text x="2" y="42" font-family="Nothing You Could Do,cursive" font-size="11" fill="#1a3870" opacity=".5">next</text>
+      </svg>
+    </div>
+    <div class="pgnum">·</div>
+  </div>
+</div>
+
+</div></div><!-- /book /scene -->
+
+<script>
+/* date */
+const mo=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const now=new Date();
+document.getElementById('dateDisplay').textContent=mo[now.getMonth()]+' '+now.getDate()+', '+now.getFullYear();
+
+/* page flip */
+const pages=['p0','p1','p2','p3'];
+let cur=0;
+
+function nextPage(){
+  if(cur>=pages.length)return;
+  document.getElementById(pages[cur]).classList.add('flipped');
+  cur++;
+  resetScrolls();
+}
+function prevPage(){
+  if(cur<=0)return;
+  cur--;
+  document.getElementById(pages[cur]).classList.remove('flipped');
+  resetScrolls();
+}
+function resetScrolls(){
+  document.querySelectorAll('.page-content').forEach(el=>el.scrollTop=0);
+}
+function toggleCheck(el,ev){
+  ev.stopPropagation();
+  el.classList.toggle('checked');
+}
+
+/* clicking anywhere on the page (not arrows, not checklist) goes next */
+document.getElementById('book').addEventListener('click',function(e){
+  if(e.target.closest('.arrow-prev')||e.target.closest('.arrow-next')||e.target.closest('.check-item'))return;
+  nextPage();
+});
+
+/* stop arrow clicks from bubbling */
+document.querySelectorAll('.arrow-prev,.arrow-next').forEach(el=>{
+  el.addEventListener('click',e=>e.stopPropagation());
+});
+</script>
+</body>
+</html>
